@@ -1,0 +1,42 @@
+#sportsdb-scores {
+    background-color: #f9f9f9;
+    border: 2px solid #0073aa;
+    border-radius: 8px;
+    padding: 15px;
+    font-family: Arial, sans-serif;
+}
+
+.scores-container {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.match-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 0;
+    border-bottom: 1px solid #ddd;
+}
+
+.team-left,
+.team-right {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.team-logo {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    border: 2px solid #0073aa;
+    background-color: #fff;
+}
+
+.match-center {
+    flex: 1;
+    text-align: center;
+    font-weight: bold;
+}
