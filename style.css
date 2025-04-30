@@ -1,42 +1,45 @@
-#sportsdb-scores {
-    background-color: #f9f9f9;
-    border: 2px solid #0073aa;
-    border-radius: 8px;
-    padding: 15px;
-    font-family: Arial, sans-serif;
+body {
+  font-family: Arial, sans-serif;
+  background: #f0f2f5;
+  margin: 20px;
+  color: #333;
 }
-
-.scores-container {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
+.live-scores {
+  max-width: 800px;
+  margin: auto;
 }
-
-.match-row {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 8px 0;
-    border-bottom: 1px solid #ddd;
+.league-title {
+  font-size: 18px;
+  font-weight: bold;
+  margin: 20px 0 10px;
 }
-
-.team-left,
-.team-right {
-    display: flex;
-    align-items: center;
-    gap: 10px;
+.live-match {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  border: 1px solid #ddd;
+  background: #fff;
+  margin-bottom: 10px;
+  padding: 10px;
+  gap: 5px;
 }
-
-.team-logo {
-    width: 30px;
-    height: 30px;
-    border-radius: 50%;
-    border: 2px solid #0073aa;
-    background-color: #fff;
+.live-match img {
+  height: 20px;
 }
-
-.match-center {
-    flex: 1;
-    text-align: center;
-    font-weight: bold;
+.score-button {
+  cursor: pointer;
+  grid-column: 2 / span 2;
+  text-align: center;
+  font-weight: bold;
+  background: #eee;
+  border-radius: 4px;
+  padding: 5px;
+}
+.match-details {
+  display: none;
+  grid-column: 1 / span 4;
+  margin-top: 10px;
+  font-size: 14px;
+  background: #fff8dc;
+  padding: 8px;
+  border-radius: 6px;
 }
