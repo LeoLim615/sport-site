@@ -1,13 +1,158 @@
+
 <!DOCTYPE html>
-<html lang="zh-Hans">
+<html lang="zh">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta charset="UTF-8">
   <title>⚽ 实时比分</title>
-  <link rel="stylesheet" href="style.css" />
+  <style>
+    body { font-family: sans-serif; padding: 20px; background: #f5f5f5; }
+    .league-group { margin-bottom: 30px; }
+    .league-title { font-weight: bold; font-size: 18px; margin-bottom: 10px; }
+    .live-match {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      border: 1px solid #ddd;
+      padding: 10px;
+      margin-bottom: 10px;
+      background: #fff;
+      gap: 5px;
+    }
+    .score-button {
+      cursor: pointer;
+      grid-column: 2 / span 2;
+      text-align: center;
+      font-weight: bold;
+      background: #eee;
+      border-radius: 4px;
+      padding: 5px;
+    }
+    .match-details {
+      grid-column: 1 / span 4;
+      margin-top: 10px;
+      font-size: 14px;
+      background: #fff8dc;
+      padding: 8px;
+      border-radius: 6px;
+    }
+  </style>
 </head>
 <body>
-  <div class="live-scores" id="liveScores">⏳ 正在加载实时比分...</div>
-  <script src="main.js"></script>
+
+<h2>⚽ 实时比分</h2>
+<div id="live-scores">加载中...</div>
+
+<script>
+const apiKey = '508029';
+const apiUrl = `https://www.thesportsdb.com/api/v2/json/${apiKey}/livescore.php?s=soccer`;
+
+fetch(apiUrl)
+  .then(res => res.json())
+  .then(data => {
+    const container = document.getElementById('live-scores');
+    if (!data.livescore || data.livescore.length === 0) {
+      container.innerHTML = '📭 目前没有正在进行的比赛';
+      return;
+    }
+
+    const grouped = {};
+    data.livescore.forEach(match => {
+      const league = match.strLeague || '其他联赛';
+      if (!grouped[league]) grouped[league] = [];
+      grouped[league].push(match);
+    });
+
+    container.innerHTML = '';
+    for (const league in grouped) {
+      const groupDiv = document.createElement('div');
+      groupDiv.className = 'league-group';
+      groupDiv.innerHTML = `<div class="league-title">🏆 ${league}</div>`;
+
+      grouped[league].forEach(match => {
+        const {
+          idEvent, strHomeTeam, strAwayTeam, intHomeScore, intAwayScore,
+          strStatus, strProgress, dateEvent, strEventTime,
+          strHomeTeamBadge, strAwayTeamBadge
+        } = match;
+
+        const utcDateTime = (dateEvent && strEventTime) ? `${dateEvent} ${strEventTime}` : '';
+
+        const matchDiv = document.createElement('div');
+        matchDiv.className = 'live-match';
+
+        matchDiv.innerHTML = `
+          <div style="grid-column: 1 / span 4;">🕒 开球时间: 
+            <span class="convert-time" data-datetime="${utcDateTime}">UTC时间加载中...</span>
+          </div>
+          <div style="text-align:left; display:flex; align-items:center; gap:6px;">
+            ${strHomeTeamBadge ? `<img src="${strHomeTeamBadge}" style="height:20px;">` : ''}
+            ${strHomeTeam}
+          </div>
+          <div class="score-button" data-id="${idEvent}">
+            ${intHomeScore} - ${intAwayScore}<br>
+            <small>⏱️ ${strStatus}${strProgress ? ' | ' + strProgress + '′' : ''}</small>
+          </div>
+          <div style="text-align:right; display:flex; justify-content:flex-end; align-items:center; gap:6px;">
+            ${strAwayTeam}
+            ${strAwayTeamBadge ? `<img src="${strAwayTeamBadge}" style="height:20px;">` : ''}
+          </div>
+          <div class="match-details" id="details-${idEvent}" style="display:none;">加载中...</div>
+        `;
+
+        groupDiv.appendChild(matchDiv);
+      });
+
+      container.appendChild(groupDiv);
+    }
+
+    document.querySelectorAll('.convert-time').forEach(el => {
+      const utc = el.dataset.datetime;
+      if (!utc) return;
+      const local = new Date(utc + ' UTC');
+      el.textContent = local.toLocaleString();
+    });
+
+    document.querySelectorAll('.score-button').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const id = btn.dataset.id;
+        const detailBox = document.getElementById(`details-${id}`);
+        if (detailBox.style.display === 'block') {
+          detailBox.style.display = 'none';
+          return;
+        }
+
+        detailBox.style.display = 'block';
+        detailBox.textContent = '⏳ 正在加载详细事件...';
+
+        fetch(`https://www.thesportsdb.com/api/v2/json/${apiKey}/lookup/event_timeline/${id}`)
+          .then(res => res.json())
+          .then(data => {
+            if (!data.timeline || data.timeline.length === 0) {
+              detailBox.textContent = '⚠️ 没有详细事件数据';
+              return;
+            }
+
+            const html = data.timeline.map(item => {
+              let icon = '⚽️';
+              if (item.strTimeline === 'Goal') icon = '⚽️ 进球';
+              else if (item.strTimeline === 'Yellow Card') icon = '🟨 黄牌';
+              else if (item.strTimeline === 'Red Card') icon = '🟥 红牌';
+              else if (item.strTimeline === 'Substitution') icon = '🔄 换人';
+              return `⏱️ ${item.intTime}' ${icon}: <strong>${item.strPlayer}</strong> ${item.strTimelineDetail || ''}`;
+            }).join('<br>');
+            detailBox.innerHTML = html;
+          })
+          .catch(err => {
+            detailBox.textContent = '⚠️ 加载失败';
+            console.error(err);
+          });
+      });
+    });
+  })
+  .catch(err => {
+    document.getElementById('live-scores').innerHTML = '⚠️ 无法获取实时比分';
+    console.error(err);
+  });
+</script>
+
 </body>
 </html>
